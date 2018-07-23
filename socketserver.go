@@ -1,4 +1,3 @@
-
 // Copyright 2015 go-swagger maintainers
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -205,7 +204,8 @@ func (ss *WebsocketServer) websocketHandler(w http.ResponseWriter, r *http.Reque
 	// we now have a websocket connection. Initiate the handshake and close the websocket connection if the handshake fails
 
 	// ToDo Handshake to get connection id
-	connectionID := uuid.NewV4().String()
+	cid, _ := uuid.NewV4()
+	connectionID := cid.String()
 	clientMetaData, err := ss.startServerHandshake(c, connectionID)
 	if err != nil {
 		// cleanup and get out of here
