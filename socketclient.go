@@ -1,4 +1,3 @@
-
 // Copyright 2015 go-swagger maintainers
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +15,6 @@
 package swaggersocket
 
 import (
-	"errors"
 	"log"
 	"net/url"
 	"sync"
@@ -40,6 +38,8 @@ type WebsocketClient struct {
 	appData         []byte
 	meta            interface{}
 	log             Logger
+
+	LoginRequest *LoginRequest
 }
 
 // SocketClientOpts is the options for a socket client
@@ -123,27 +123,29 @@ func (sc *WebsocketClient) Connect() error {
 	return nil
 }
 
+type LoginRequest struct {
+	PType  string
+	PID    string
+	PToken string
+}
+
+type LoginResponse struct {
+	UID        string
+	Token      string
+	Gram       int
+	Gem        int
+	ErrMessage string
+}
+
 func (sc *WebsocketClient) startClientHandshake(c *websocket.Conn, meta interface{}) (string, error) {
-	if err := c.WriteJSON(&clientHandshakeMetaData{
-		Type: clientHandshakeMetaDataFrame,
-		Meta: meta,
-	}); err != nil {
+	if err := c.WriteJSON(sc.LoginRequest); err != nil {
 		return "", err
 	}
-	connIDFrame := &serverHandshakeConnectionID{}
-	if err := c.ReadJSON(connIDFrame); err != nil {
+	resp := &LoginResponse{}
+	if err := c.ReadJSON(resp); err != nil {
 		return "", err
 	}
-	if connIDFrame.Type != serverHandshakeConnectionIDFrame {
-		return "", errors.New("handshake error")
-	}
-	connID := connIDFrame.ConnectionID
-	if err := c.WriteJSON(&clientHandshakeAck{
-		Type: clientHandshakeAckFrame,
-	}); err != nil {
-		return "", err
-	}
-	return connID, nil
+	return resp.UID, nil
 }
 
 // Connection returns the socketConnection object
