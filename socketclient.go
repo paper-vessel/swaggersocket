@@ -23,6 +23,7 @@ import (
 
 	"github.com/cenkalti/backoff"
 	"github.com/gorilla/websocket"
+	"github.com/humblers/spaceknights/pkg/restsocket"
 )
 
 // WebsocketClient is the websockets client
@@ -39,7 +40,7 @@ type WebsocketClient struct {
 	meta            interface{}
 	log             Logger
 
-	LoginRequest *LoginRequest
+	LoginRequest *restsocket.LoginRequest
 }
 
 // SocketClientOpts is the options for a socket client
@@ -123,28 +124,15 @@ func (sc *WebsocketClient) Connect() error {
 	return nil
 }
 
-type LoginRequest struct {
-	PType  string
-	PID    string
-	PToken string
-}
-
-type LoginResponse struct {
-	UID        string
-	Token      string
-	Gram       int
-	Gem        int
-	ErrMessage string
-}
-
 func (sc *WebsocketClient) startClientHandshake(c *websocket.Conn, meta interface{}) (string, error) {
 	if err := c.WriteJSON(sc.LoginRequest); err != nil {
 		return "", err
 	}
-	resp := &LoginResponse{}
+	resp := &restsocket.LoginResponse{}
 	if err := c.ReadJSON(resp); err != nil {
 		return "", err
 	}
+	sc.log.Printf("login response(%v)\n", resp)
 	return resp.UID, nil
 }
 
